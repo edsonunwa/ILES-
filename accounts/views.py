@@ -85,5 +85,25 @@ def me(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
 
+# accounts/views.py - add this new view
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_dashboard(request):
+    """
+    Example of a role-specific view.
+    Only students can access this.
+    """
+    if request.user.role != 'STUDENT':
+        return Response({
+            'error': 'Only students can access this'
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    return Response({
+        'message': f'Welcome student {request.user.username}!',
+        'student_data': {
+            'total_logs': 0,  # We'll add real data later
+            'pending_tasks': 0
+        }
+    })
 # Create your views here.
