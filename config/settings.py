@@ -119,4 +119,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # Token for API
+        'rest_framework.authentication.SessionAuthentication',  # Session for browsable API
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Most views require login
+    ]
+}
+
 AUTH_USER_MODEL = 'accounts.User'
