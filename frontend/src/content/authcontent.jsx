@@ -1,5 +1,6 @@
+// src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from 'react'
-import { authService } from '../services/authService'
+import { authService, USE_MOCK } from '../services/authservice'
 
 export const AuthContext = createContext()
 
@@ -8,15 +9,21 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
 
+    // Check if user is already logged in (on page refresh)
     useEffect(() => {
-        // Check if user is already logged in
-        const storedUser = authService.getUser()
-        const token = authService.getToken()
-        
-        if (storedUser && token) {
-            setUser(storedUser)
+        const checkLoggedIn = () => {
+            const storedUser = authService.getUser()
+            const token = authService.getToken()
+            
+            console.log('Checking stored auth:', { storedUser, token }) // Debug
+            
+            if (storedUser && token) {
+                setUser(storedUser)
+            }
+            setLoading(false)
         }
-        setLoading(false)
+        
+        checkLoggedIn()
     }, [])
 
     const login = async (email, password) => {
@@ -25,6 +32,7 @@ export const AuthProvider = ({ children }) => {
         
         try {
             const response = await authService.login(email, password)
+            console.log('Login response:', response) // Debug
             
             // Save to localStorage
             authService.setToken(response.token)
@@ -33,6 +41,7 @@ export const AuthProvider = ({ children }) => {
             setUser(response.user)
             return { success: true }
         } catch (err) {
+            console.error('Login error:', err) // Debug
             const errorMessage = err.response?.data?.error || 'Login failed'
             setError(errorMessage)
             return { success: false, error: errorMessage }
@@ -47,16 +56,11 @@ export const AuthProvider = ({ children }) => {
         
         try {
             const response = await authService.register(userData)
-            
-            // If register returns token (auto-login)
-            if (response.token) {
-                authService.setToken(response.token)
-                authService.setUser(response.user)
-                setUser(response.user)
-            }
+            console.log('Register response:', response) // Debug
             
             return { success: true }
         } catch (err) {
+            console.error('Register error:', err) // Debug
             const errorMessage = err.response?.data?.error || 'Registration failed'
             setError(errorMessage)
             return { success: false, error: errorMessage }
@@ -68,6 +72,8 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await authService.logout()
+        } catch (err) {
+            console.error('Logout error:', err)
         } finally {
             // Always clear local data even if API call fails
             authService.removeToken()
