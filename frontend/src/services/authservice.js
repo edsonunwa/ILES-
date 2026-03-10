@@ -1,3 +1,4 @@
+// src/services/authService.js
 // Based on API_CONTRACTS.md
 // POST /auth/login/ → { email, password } → { token, user }
 // POST /auth/register/ → { email, password, role } → { user }
@@ -30,16 +31,18 @@ const MOCK_USERS = [
 ]
 
 // Flag to switch between mock and real API
-const USE_MOCK = true  // Set to false when friend's API is ready
+export const USE_MOCK = true  // Change to false when friend's API is ready
 
 export const authService = {
     // LOGIN
     login: async (email, password) => {
+        console.log('Login attempt:', email) // For debugging
+        
         if (USE_MOCK) {
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 1000))
             
-            // Find user (mock validation)
+            // Find user
             const user = MOCK_USERS.find(u => u.email === email)
             
             if (!user) {
@@ -75,13 +78,21 @@ export const authService = {
             throw error
         }
         
-        return response.json()  // Should match contract: { token, user }
+        return response.json()
     },
     
     // REGISTER
     register: async (userData) => {
+        console.log('Register attempt:', userData) // For debugging
+        
         if (USE_MOCK) {
             await new Promise(resolve => setTimeout(resolve, 1000))
+            
+            // Check if email exists
+            const existingUser = MOCK_USERS.find(u => u.email === userData.email)
+            if (existingUser) {
+                throw { response: { data: { error: 'Email already exists' } } }
+            }
             
             // Mock registration
             const newUser = {
@@ -114,7 +125,7 @@ export const authService = {
             throw error
         }
         
-        return response.json()  // Should match contract: { user }
+        return response.json()
     },
     
     // LOGOUT
@@ -124,11 +135,12 @@ export const authService = {
             return { message: 'Logged out successfully' }
         }
         
+        const token = localStorage.getItem('token')
         const response = await fetch(`${BASE_URL}/auth/logout/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': token ? `Bearer ${token}` : ''
             }
         })
         

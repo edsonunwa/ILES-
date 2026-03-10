@@ -1,15 +1,49 @@
+// src/App.jsx
+import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider } from './context/authcontext'
+import { useAuth } from './hooks/useAuth'
 import ProtectedRoute from './components/common/ProtectedRoute'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
-import ForgotPassword from './pages/auth/ForgotPassword'
-import ResetPassword from './pages/auth/ResetPassword'
 
-// Temporary placeholder dashboards (you'll build these later)
-const StudentDashboard = () => <div>Student Dashboard</div>
-const SupervisorDashboard = () => <div>Supervisor Dashboard</div>
-const AdminDashboard = () => <div>Admin Dashboard</div>
+// Temporary Dashboard Components (replace later)
+const StudentDashboard = () => (
+    <div style={{ padding: '2rem' }}>
+        <h1>Student Dashboard</h1>
+        <p>Welcome student! Your logs will appear here.</p>
+    </div>
+)
+
+const SupervisorDashboard = () => (
+    <div style={{ padding: '2rem' }}>
+        <h1>Supervisor Dashboard</h1>
+        <p>Welcome supervisor! Reviews will appear here.</p>
+    </div>
+)
+
+const AdminDashboard = () => (
+    <div style={{ padding: '2rem' }}>
+        <h1>Admin Dashboard</h1>
+        <p>Welcome admin! Management tools will appear here.</p>
+    </div>
+)
+
+// Dashboard router component
+const DashboardRouter = () => {
+    const { user } = useAuth()
+    
+    switch(user?.role) {
+        case 'student':
+            return <StudentDashboard />
+        case 'supervisor':
+            return <SupervisorDashboard />
+        case 'admin':
+            return <AdminDashboard />
+        default:
+            return <Navigate to="/login" replace />
+    }
+}
 
 function App() {
     return (
@@ -19,23 +53,15 @@ function App() {
                     {/* Public Routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
                     
-                    {/* Protected Routes */}
+                    {/* Protected Dashboard */}
                     <Route path="/dashboard" element={
                         <ProtectedRoute>
-                            {() => {
-                                const { user } = useAuth()
-                                if (user?.role === 'student') return <StudentDashboard />
-                                if (user?.role === 'supervisor') return <SupervisorDashboard />
-                                if (user?.role === 'admin') return <AdminDashboard />
-                                return <Navigate to="/login" />
-                            }}
+                            <DashboardRouter />
                         </ProtectedRoute>
                     } />
                     
-                    {/* Role-specific dashboards */}
+                    {/* Role-specific routes (for future features) */}
                     <Route path="/student/*" element={
                         <ProtectedRoute allowedRoles={['student']}>
                             <StudentDashboard />
@@ -54,9 +80,16 @@ function App() {
                         </ProtectedRoute>
                     } />
                     
-                    {/* Default redirect */}
-                    <Route path="/" element={<Navigate to="/dashboard" />} />
-                    <Route path="*" element={<div>404 - Page Not Found</div>} />
+                    {/* Root redirect */}
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    
+                    {/* 404 */}
+                    <Route path="*" element={
+                        <div style={{ padding: '2rem', textAlign: 'center' }}>
+                            <h1>404 - Page Not Found</h1>
+                            <a href="/">Go Home</a>
+                        </div>
+                    } />
                 </Routes>
             </AuthProvider>
         </BrowserRouter>
